@@ -1,0 +1,41 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.9.2
+2 info using node@v23.6.0
+3 silly config load:file:C:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\edgar\AshWatch\.npmrc
+5 silly config load:file:C:\Users\Edgar\.npmrc
+6 silly config load:file:C:\Users\edgar\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm install
+8 verbose argv "install" "--cache" ".\\.npm-cache" "--loglevel" "warn"
+9 verbose logfile logs-max:10 dir:C:\Users\edgar\AshWatch\.npm-cache\_logs\2026-05-26T16_08_43_578Z-
+10 verbose logfile C:\Users\edgar\AshWatch\.npm-cache\_logs\2026-05-26T16_08_43_578Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly idealTree buildDeps
+14 silly fetch manifest @vitejs/plugin-react@latest
+15 silly packumentCache full:https://registry.npmjs.org/@vitejs%2fplugin-react cache-miss
+16 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with EACCES
+17 http fetch GET https://registry.npmjs.org/@vitejs%2fplugin-react attempt 1 failed with EACCES
+18 http fetch GET https://registry.npmjs.org/npm attempt 2 failed with EACCES
+19 http fetch GET https://registry.npmjs.org/@vitejs%2fplugin-react attempt 2 failed with EACCES
+20 http fetch GET https://registry.npmjs.org/npm attempt 3 failed with EACCES
+21 http fetch GET https://registry.npmjs.org/@vitejs%2fplugin-react attempt 3 failed with EACCES
+22 silly fetch manifest concurrently@latest
+23 silly packumentCache full:https://registry.npmjs.org/concurrently cache-miss
+24 http fetch GET https://registry.npmjs.org/concurrently attempt 1 failed with EACCES
+25 http fetch GET https://registry.npmjs.org/concurrently attempt 2 failed with EACCES
+26 http fetch GET https://registry.npmjs.org/concurrently attempt 3 failed with EACCES
+27 silly fetch manifest cors@latest
+28 silly packumentCache full:https://registry.npmjs.org/cors cache-miss
+29 http fetch GET https://registry.npmjs.org/cors attempt 1 failed with EACCES
+30 http fetch GET https://registry.npmjs.org/cors attempt 2 failed with EACCES
+31 http fetch GET https://registry.npmjs.org/cors attempt 3 failed with EACCES
+32 silly fetch manifest dotenv@latest
+33 silly packumentCache full:https://registry.npmjs.org/dotenv cache-miss
+34 http fetch GET https://registry.npmjs.org/dotenv attempt 1 failed with EACCES
+35 http fetch GET https://registry.npmjs.org/dotenv attempt 2 failed with EACCES
+36 http fetch GET https://registry.npmjs.org/dotenv attempt 3 failed with EACCES
+37 silly fetch manifest express@latest
+38 silly packumentCache full:https://registry.npmjs.org/express cache-miss
+39 http fetch GET https://registry.npmjs.org/express attempt 1 failed with EACCES
+40 http fetch GET https://registry.npmjs.org/express attempt 2 failed with EACCES
