@@ -30,8 +30,8 @@ const emptyDrama = {
   poster_preview_url: "",
 };
 const POSTER_MAX_BYTES = 250 * 1024;
-const POSTER_WIDTH_STEPS = [700, 620, 540, 460];
-const POSTER_QUALITY_STEPS = [0.7, 0.62, 0.54, 0.46];
+const POSTER_WIDTH_STEPS = [760, 680, 600, 520, 440, 360, 300, 240, 200, 160, 128];
+const POSTER_QUALITY_STEPS = [0.76, 0.68, 0.6, 0.52, 0.44, 0.36, 0.28, 0.22, 0.18, 0.14, 0.1];
 
 export default function AddDrama() {
   const { id } = useParams();
@@ -61,34 +61,40 @@ export default function AddDrama() {
 
       reader.onload = () => {
         image.onload = async () => {
-          let bestResult = null;
+          let smallestResult = null;
           const canvas = document.createElement("canvas");
           const context = canvas.getContext("2d");
+          if (!context) {
+            reject(new Error("Poster compression failed."));
+            return;
+          }
+
           for (const maxWidth of POSTER_WIDTH_STEPS) {
             const scale = Math.min(1, maxWidth / image.width);
-            canvas.width = Math.round(image.width * scale);
-            canvas.height = Math.round(image.height * scale);
-            context.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.width = Math.max(1, Math.round(image.width * scale));
+            canvas.height = Math.max(1, Math.round(image.height * scale));
+            context.fillStyle = "#ffffff";
+            context.fillRect(0, 0, canvas.width, canvas.height);
             context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
             for (const quality of POSTER_QUALITY_STEPS) {
               const blob = await new Promise((blobResolve) => canvas.toBlob(blobResolve, "image/webp", quality));
               if (!blob) continue;
               const result = {
                 file: new File([blob], "poster.webp", { type: "image/webp" }),
                 previewUrl: canvas.toDataURL("image/webp", quality),
+                size: blob.size,
               };
-              bestResult = result;
+              if (!smallestResult || blob.size < smallestResult.size) {
+                smallestResult = result;
+              }
               if (blob.size <= POSTER_MAX_BYTES) {
                 resolve(result);
                 return;
               }
             }
           }
-          if (bestResult) {
-            resolve(bestResult);
-            return;
-          }
-          reject(new Error("Poster compression failed."));
+          reject(new Error(`Poster is still ${Math.round((smallestResult?.size || file.size) / 1024)} KB after compression.`));
         };
         image.onerror = reject;
         image.src = reader.result;
@@ -103,18 +109,14 @@ export default function AddDrama() {
     if (!file) return;
     try {
       const compressed = await compressImage(file);
-      if (compressed.file.size > POSTER_MAX_BYTES) {
-        window.alert("That poster is still over 250 KB after compression. Try a smaller image for now.");
-        return;
-      }
       setForm((current) => ({
         ...current,
         poster_file: compressed.file,
         poster_preview_url: compressed.previewUrl,
         poster_url: compressed.previewUrl,
       }));
-    } catch {
-      window.alert("AshWatch could not process that poster. Try a different image.");
+    } catch (error) {
+      window.alert(error?.message || "AshWatch could not process that poster. Try a different image.");
     }
   }
 
