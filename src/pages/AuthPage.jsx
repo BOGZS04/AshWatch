@@ -14,6 +14,7 @@ export default function AuthPage({ mode }) {
   const [password, setPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,7 +28,7 @@ export default function AuthPage({ mode }) {
       if (creating) {
         await signUp({ email, password, displayName, inviteCode });
       } else {
-        await signIn({ email, password });
+        await signIn({ email, password, remember: rememberMe });
       }
       navigate(location.state?.from || "/", { replace: true });
     } catch (authError) {
@@ -111,6 +112,20 @@ export default function AuthPage({ mode }) {
               </button>
             </span>
           </label>
+
+          {!creating ? (
+            <label className="remember-row">
+              <input
+                checked={rememberMe}
+                type="checkbox"
+                onChange={(event) => setRememberMe(event.target.checked)}
+              />
+              <span>
+                <strong>Remember me</strong>
+                <small>Keep me logged in on this device.</small>
+              </span>
+            </label>
+          ) : null}
 
           {error ? <p className="ai-error">{error}</p> : null}
 

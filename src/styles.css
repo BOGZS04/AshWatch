@@ -2189,6 +2189,35 @@ body {
   transform: translateY(-1px);
 }
 
+.remember-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  color: var(--cinema-ink);
+  cursor: pointer;
+  font-weight: 800;
+  user-select: none;
+}
+
+.remember-row input {
+  width: 1.2rem;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--cinema-blue);
+  cursor: pointer;
+}
+
+.remember-row span {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.remember-row small {
+  color: var(--cinema-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .auth-switch {
   color: var(--cinema-muted);
   font-weight: 800;

@@ -3,7 +3,9 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import {
   fetchCurrentUser,
+  readRememberSessionPreference,
   readSession,
+  refreshSession,
   restUpsert,
   saveSession,
   signInWithPassword,
@@ -15,6 +17,7 @@ import {
 
 const AuthContext = createContext(null);
 const PENDING_INVITE_KEY = "ashwatch.pendingInviteCode";
+const REFRESH_WINDOW_SECONDS = 60;
 
 async function postInvite(path, body, accessToken = "") {
   const apiBase = import.meta.env.VITE_APP_API_URL || (import.meta.env.DEV ? "http://localhost:8787" : "");
@@ -38,6 +41,13 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => readSession()?.user || null);
   const [loading, setLoading] = useState(true);
 
+  function shouldRefreshSession(currentSession) {
+    if (!currentSession?.refresh_token) return false;
+    if (!currentSession.expires_at) return false;
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    return currentSession.expires_at - nowSeconds <= REFRESH_WINDOW_SECONDS;
+  }
+
   async function ensureProfile(accessToken, currentUser, displayName = "") {
     if (!accessToken || !currentUser?.id) return;
     await restUpsert("profiles", accessToken, {
@@ -56,13 +66,28 @@ export function AuthProvider({ children }) {
         return;
       }
       try {
-        const currentUser = await fetchCurrentUser(session.access_token);
+        let activeSession = session;
+        if (shouldRefreshSession(activeSession)) {
+          const refreshed = await refreshSession(activeSession.refresh_token);
+          activeSession = { ...refreshed, user: refreshed.user || activeSession.user };
+        }
+
+        let currentUser;
+        try {
+          currentUser = await fetchCurrentUser(activeSession.access_token);
+        } catch (error) {
+          if (!activeSession.refresh_token) throw error;
+          const refreshed = await refreshSession(activeSession.refresh_token);
+          activeSession = { ...refreshed, user: refreshed.user || activeSession.user };
+          currentUser = await fetchCurrentUser(activeSession.access_token);
+        }
+
         if (cancelled) return;
-        const nextSession = { ...session, user: currentUser };
-        await ensureProfile(session.access_token, currentUser);
+        const nextSession = { ...activeSession, user: currentUser };
+        await ensureProfile(activeSession.access_token, currentUser);
         setUser(currentUser);
         setSession(nextSession);
-        saveSession(nextSession);
+        saveSession(nextSession, { remember: readRememberSessionPreference() });
       } catch {
         if (cancelled) return;
         setSession(null);
@@ -92,7 +117,7 @@ export function AuthProvider({ children }) {
       await postInvite("/api/invite/consume", { code: normalizedInviteCode }, data.access_token);
       setSession(nextSession);
       setUser(data.user);
-      saveSession(nextSession);
+      saveSession(nextSession, { remember: true });
       toast.success("Welcome to AshWatch.");
       return data.user;
     }
@@ -101,7 +126,7 @@ export function AuthProvider({ children }) {
     return data.user;
   }
 
-  async function signIn({ email, password }) {
+  async function signIn({ email, password, remember }) {
     const data = await signInWithPassword({ email, password });
     const nextSession = { ...data, user: data.user };
     await ensureProfile(data.access_token, data.user);
@@ -112,7 +137,7 @@ export function AuthProvider({ children }) {
     }
     setSession(nextSession);
     setUser(data.user);
-    saveSession(nextSession);
+    saveSession(nextSession, { remember });
     toast.success("Welcome back.");
     return data.user;
   }
@@ -144,7 +169,7 @@ export function AuthProvider({ children }) {
     const nextSession = { ...session, user: updatedUser };
     setUser(updatedUser);
     setSession(nextSession);
-    saveSession(nextSession);
+    saveSession(nextSession, { remember: readRememberSessionPreference() });
     toast.success("Display name updated.");
     return updatedUser;
   }
@@ -161,7 +186,7 @@ export function AuthProvider({ children }) {
     const nextSession = { ...session, user: updatedUser };
     setUser(updatedUser);
     setSession(nextSession);
-    saveSession(nextSession);
+    saveSession(nextSession, { remember: readRememberSessionPreference() });
     toast.success("Password updated.");
     return updatedUser;
   }

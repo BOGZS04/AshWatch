@@ -1,6 +1,7 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const SESSION_KEY = "ashwatch.supabase.session";
+const REMEMBER_SESSION_KEY = "ashwatch.supabase.rememberSession";
 const POSTER_BUCKET = "drama-posters";
 
 export const supabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
@@ -14,7 +15,7 @@ function getEndpoint(path) {
 
 function getStoredSession() {
   try {
-    const saved = localStorage.getItem(SESSION_KEY);
+    const saved = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
     return saved ? JSON.parse(saved) : null;
   } catch {
     return null;
@@ -25,12 +26,26 @@ export function readSession() {
   return getStoredSession();
 }
 
-export function saveSession(session) {
+export function readRememberSessionPreference() {
+  return localStorage.getItem(REMEMBER_SESSION_KEY) !== "false";
+}
+
+export function saveSession(session, options = {}) {
   if (!session) {
     localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(REMEMBER_SESSION_KEY);
     return;
   }
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  const remember = options.remember ?? readRememberSessionPreference();
+  localStorage.setItem(REMEMBER_SESSION_KEY, remember ? "true" : "false");
+  if (remember) {
+    sessionStorage.removeItem(SESSION_KEY);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    return;
+  }
+  localStorage.removeItem(SESSION_KEY);
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
 }
 
 function authHeaders(accessToken) {
@@ -130,6 +145,15 @@ export async function signInWithPassword({ email, password }) {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ email, password }),
+  });
+  return parseResponse(response);
+}
+
+export async function refreshSession(refreshToken) {
+  const response = await fetch(getEndpoint("/auth/v1/token?grant_type=refresh_token"), {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ refresh_token: refreshToken }),
   });
   return parseResponse(response);
 }
